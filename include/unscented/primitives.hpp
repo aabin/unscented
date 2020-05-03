@@ -1,3 +1,6 @@
+#ifndef UNSCENTED_PRIMITIVES_HPP
+#define UNSCENTED_PRIMITIVES_HPP
+
 #include "unscented/primitives.h"
 
 namespace unscented
@@ -67,3 +70,5 @@ UnitComplex unit_complex_mean_function(
   return UnitComplex(a, b);
 }
 } // namespace unscented
+
+#endif
