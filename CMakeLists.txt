@@ -8,6 +8,9 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 # Find Eigen
 find_package(Eigen3 REQUIRED)
 
+# Set output directory for targets
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 # Library
 add_library(unscented INTERFACE)
 target_include_directories(unscented INTERFACE include ${EIGEN3_INCLUDE_DIR})
