@@ -286,134 +286,38 @@ TEST_CASE("Predict")
     }
   }
 
-  // SECTION("State is a not a vector space")
-  // {
-  //   using UKF = UKF<Vector<3>, 3, Vector<2>, 2>;
+  SECTION("State is a not a vector space")
+  {
+    SECTION("Linear system model")
+    {
+      using UKF = UKF<Rotation2d, Vector<2>>;
+      UKF ukf(mean_function<UKF::NUM_SIGMA_POINTS>);
 
-  //   SECTION("Linear system model")
-  //   {
-  //     UKF ukf;
+      ukf.weight_coefficients(1.0, 1.0, 1.0);
+      ukf.state(Rotation2d(5 * M_PI / 6));
+      ukf.state_covariance(UKF::N_by_N::Identity());
+      ukf.process_covariance(UKF::N_by_N::Identity() * 1e-3);
 
-  //     ukf.weight_coefficients(1.0, 1.0, 1.0);
-  //     ukf.state(UKF::State(1, 2, 3));
-  //     ukf.state_covariance(UKF::N_by_N::Identity());
-  //     ukf.process_covariance(UKF::N_by_N::Identity() * 1e-3);
+      // System model adds pi/3
+      auto sys_model = [](UKF::State& state) {
+        state = state + Rotation2d(M_PI / 3);
+      };
 
-  //     // System model adds one to all state elements
-  //     auto sys_model = [](UKF::State& state) { state += UKF::State::Ones();
-  //     };
+      ukf.predict(sys_model);
 
-  //     ukf.predict(sys_model);
+      const auto& state = ukf.state();
+      const auto& cov = ukf.state_covariance();
 
-  //     const auto& state = ukf.state();
-  //     const auto& cov = ukf.state_covariance();
+      // Angle has wrapped around
+      CHECK(state.angle() == Approx(-5 * M_PI / 6));
 
-  //     CHECK(state.x() == Approx(2.0));
-  //     CHECK(state.y() == Approx(3.0));
-  //     CHECK(state.z() == Approx(4.0));
+      CHECK(cov(0, 0) == Approx(1.0 + 1e-3));
+    }
 
-  //     CHECK(cov(0, 0) == Approx(1.0 + 1e-3));
-  //     CHECK(cov(0, 1) == Approx(0.0));
-  //     CHECK(cov(0, 2) == Approx(0.0));
-  //     CHECK(cov(1, 0) == Approx(0.0));
-  //     CHECK(cov(1, 1) == Approx(1.0 + 1e-3));
-  //     CHECK(cov(1, 2) == Approx(0.0));
-  //     CHECK(cov(2, 0) == Approx(0.0));
-  //     CHECK(cov(2, 1) == Approx(0.0));
-  //     CHECK(cov(2, 2) == Approx(1.0 + 1e-3));
-  //   }
-
-  //   SECTION("Nonlinear system model")
-  //   {
-  //     UKF ukf;
-
-  //     ukf.weight_coefficients(1.0, 1.0, 1.0);
-  //     ukf.state(UKF::State(1, 2, 3));
-  //     ukf.state_covariance(UKF::N_by_N::Identity());
-  //     ukf.process_covariance(UKF::N_by_N::Identity() * 1e-3);
-
-  //     // System model has a product with state elements
-  //     auto sys_model = [](UKF::State& state) {
-  //       const auto state_in = state;
-  //       state(0) += 0.1 * state_in(1);
-  //       state(1) += 1.0;
-  //       state(2) += 0.01 * state_in(0) * state_in(1);
-  //     };
-
-  //     ukf.predict(sys_model);
-
-  //     const auto& state = ukf.state();
-  //     const auto& cov = ukf.state_covariance();
-
-  //     CHECK(state.x() == Approx(1.2));
-  //     CHECK(state.y() == Approx(3.0));
-  //     CHECK(state.z() == Approx(3.02));
-
-  //     CHECK(cov(0, 0) == Approx(1.0 + 1e-3 + 0.01));
-  //     CHECK(cov(0, 1) == Approx(0.1));
-  //     CHECK(cov(0, 2) == Approx(0.021));
-  //     CHECK(cov(1, 0) == Approx(0.1));
-  //     CHECK(cov(1, 1) == Approx(1.0 + 1e-3));
-  //     CHECK(cov(1, 2) == Approx(0.01));
-  //     CHECK(cov(2, 0) == Approx(0.021));
-  //     CHECK(cov(2, 1) == Approx(0.01));
-  //     CHECK(cov(2, 2) == Approx(1.0 + 1e-3 + 0.0005));
-  //   }
-  // }
+    SECTION("Nonlinear system model")
+    {
+    }
+  }
 }
 
-// SECTION("Custom state mean function")
-// {
-//   UKF ukf;
-
-//   // Custom state mean function clips the z value of the state to be
-//   // between 0 and 1
-//   auto custom_state_mean_func = [](const UKF::SigmaPoints& states,
-//                                    const UKF::SigmaWeights& weights) {
-//     Vector<3> weighted_state = states[0] * weights[0];
-//     for (std::size_t i = 1; i < states.size(); ++i)
-//     {
-//       weighted_state = weighted_state + states[i] * weights[i];
-//     }
-//     if (weighted_state.z() > 1)
-//     {
-//       weighted_state.z() = 1.0;
-//     }
-//     else if (weighted_state.z() < 0)
-//     {
-//       weighted_state.z() = 0.0;
-//     }
-//     return weighted_state;
-//   };
-//   ukf.state_mean_function(custom_state_mean_func);
-
-//   ukf.weight_coefficients(1.0, 1.0, 1.0);
-//   ukf.state(UKF::State(1, 2, 0.5));
-//   ukf.state_covariance(UKF::N_by_N::Identity());
-//   ukf.process_covariance(UKF::N_by_N::Identity() * 1e-3);
-
-//   // System model adds one to all state elements
-//   auto sys_model = [](UKF::State& state) {
-//     state += UKF::State::Ones();
-//   };
-
-//   ukf.predict(sys_model);
-
-//   const auto& state = ukf.state();
-//   const auto& cov = ukf.state_covariance();
-
-//   CHECK(state.x() == Approx(2.0));
-//   CHECK(state.y() == Approx(3.0));
-//   CHECK(state.z() == Approx(1.0)); // clipped
-
-//   CHECK(cov(0, 0) == Approx(1.0 + 1e-3));
-//   CHECK(cov(0, 1) == Approx(0.0));
-//   CHECK(cov(0, 2) == Approx(0.0));
-//   CHECK(cov(1, 0) == Approx(0.0));
-//   CHECK(cov(1, 1) == Approx(1.0 + 1e-3));
-//   CHECK(cov(1, 2) == Approx(0.0));
-//   CHECK(cov(2, 0) == Approx(0.0));
-//   CHECK(cov(2, 1) == Approx(0.0));
-//   CHECK(cov(2, 2) == Approx(1.0 + 1e-3));
-// }
 } // namespace unscented
