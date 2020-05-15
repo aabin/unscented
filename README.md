@@ -2,6 +2,8 @@
 
 A flexible and powerful unscented Kalman filter library (C++11 or later) that makes no assumptions about what you're estimating or how you're measuring it.
 
+**WARNING:** Unscented is currently a work in progress and has not reached a stable API. It is not recommended it is used until this message is removed.
+
 ## Table of contents
 * [What is an unscented Kalman filter?](#what-is-an-unscented-kalman-filter)
 * [Features](#features)
