@@ -16,7 +16,8 @@ struct RadarMeasurement
   static constexpr std::size_t DOF = 2;
 
   /**
-   * @brief Default constructor (required by filter)
+   * @brief Default constructor initializes an identity measurement (required by
+   * filter)
    */
   RadarMeasurement() = default;
 
@@ -101,16 +102,15 @@ RadarMeasurement mean_function(
     const std::array<RadarMeasurement, SIZE>& radar_measurements,
     const std::array<double, SIZE>& weights)
 {
-  auto mean_range{0.0};
-  unscented::Vector<2> mean_unit_complex;
+  std::array<unscented::Rotation2d, SIZE> elevations;
+  std::array<double, SIZE> ranges;
   for (std::size_t i = 0; i < SIZE; ++i)
   {
-    mean_range += weights[i] * radar_measurements[i].range;
-    mean_unit_complex =
-        mean_unit_complex +
-        weights[i] * radar_measurements[i].elevation.unit_complex();
+    elevations[i] = radar_measurements[i].elevation;
+    ranges[i] = radar_measurements[i].range;
   }
-  return RadarMeasurement(mean_range, unscented::Rotation2d(mean_unit_complex));
+  return RadarMeasurement(unscented::mean_function(ranges, weights),
+                          unscented::mean_function(elevations, weights));
 }
 
 /**
