@@ -5,31 +5,29 @@
 
 namespace unscented
 {
-template <typename PRIMITIVE, std::size_t ARRAY_SIZE>
-PRIMITIVE mean_function(const std::array<PRIMITIVE, ARRAY_SIZE>& primitives,
-                        const std::array<double, ARRAY_SIZE>& weights)
-{
-  PRIMITIVE mean_primitive;
-  for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
-  {
-    mean_primitive = mean_primitive + primitives[i] * weights[i];
-  }
-  return mean_primitive;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
-// UnitComplex
+// Rotation2d
 ///////////////////////////////////////////////////////////////////////////////
-UnitComplex::UnitComplex(const Vector<1>& vec) : UnitComplex(vec(0))
+Rotation2d::Rotation2d(const Vector<1>& vec) : Rotation2d(vec(0))
 {
 }
 
-UnitComplex::UnitComplex(double angle)
-  : UnitComplex(std::cos(angle), std::sin(angle))
+Rotation2d::Rotation2d(double angle)
+  : Rotation2d(std::cos(angle), std::sin(angle))
 {
 }
 
-UnitComplex::UnitComplex(double a_in, double b_in) : a(a_in), b(b_in)
+Rotation2d::Rotation2d(const Matrix<2, 2>& rotation_matrix)
+  : Rotation2d(rotation_matrix(0, 0), rotation_matrix(1, 0))
+{
+}
+
+Rotation2d::Rotation2d(const Vector<2>& unit_complex)
+  : Rotation2d(unit_complex(0), unit_complex(1))
+{
+}
+
+Rotation2d::Rotation2d(double a_in, double b_in) : a(a_in), b(b_in)
 {
   static const double EPS = 1e-6;
   const auto sq_norm = a * a + b * b;
@@ -41,34 +39,46 @@ UnitComplex::UnitComplex(double a_in, double b_in) : a(a_in), b(b_in)
   }
 }
 
-double UnitComplex::angle() const
+double Rotation2d::angle() const
 {
   return std::atan2(b, a);
 }
 
-UnitComplex operator+(const UnitComplex& lhs, const UnitComplex& rhs)
+Matrix<2, 2> Rotation2d::rotation_matrix() const
 {
-  return UnitComplex(lhs.angle() + rhs.angle());
+  Matrix<2, 2> ret;
+  ret << a, -b, b, a; // a is cos(angle), b is sin(angle)
+  return ret;
 }
 
-Vector<1> operator-(const UnitComplex& lhs, const UnitComplex& rhs)
+Vector<2> Rotation2d::unit_complex() const
 {
-  return Vector<1>(UnitComplex(rhs.angle() - lhs.angle()).angle());
+  return {a, b};
 }
 
-UnitComplex unit_complex_mean_function(
-    const std::array<UnitComplex, 2 * UnitComplex::DOF + 1>& states,
-    const std::array<double, 2 * UnitComplex::DOF + 1>& weights)
+Rotation2d operator+(const Rotation2d& lhs, const Rotation2d& rhs)
 {
-  double a{0.0};
-  double b{0.0};
-  for (std::size_t i = 0; i < (2 * UnitComplex::DOF + 1); ++i)
+  return Rotation2d(lhs.angle() + rhs.angle());
+}
+
+Vector<1> operator-(const Rotation2d& lhs, const Rotation2d& rhs)
+{
+  return Vector<1>(Rotation2d(rhs.angle() - lhs.angle()).angle());
+}
+
+template <std::size_t SIZE>
+Rotation2d mean_function(const std::array<Rotation2d, SIZE>& rotations,
+                         const std::array<double, SIZE>& weights)
+{
+  Vector<2> mean_unit_complex;
+  for (std::size_t i = 0; i < SIZE; ++i)
   {
-    a += weights[i] * states[i].a;
-    b += weights[i] * states[i].b;
+    mean_unit_complex =
+        mean_unit_complex + weights[i] * rotations[i].unit_complex();
   }
-  return UnitComplex(a, b);
+  return Rotation2d(mean_unit_complex);
 }
+
 } // namespace unscented
 
 #endif

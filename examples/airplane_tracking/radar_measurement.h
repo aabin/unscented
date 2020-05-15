@@ -39,7 +39,7 @@ struct RadarMeasurement
    * @param[in] r Measured range to airplane
    * @param[in] e Measured elevation of airplane
    */
-  RadarMeasurement(double r, const unscented::UnitComplex& e)
+  RadarMeasurement(double r, const unscented::Rotation2d& e)
     : range(r), elevation(e)
   {
   }
@@ -59,7 +59,7 @@ struct RadarMeasurement
   double range{0.0};
 
   /** Elevation of airplane */
-  unscented::UnitComplex elevation{0.0};
+  unscented::Rotation2d elevation{0.0};
 };
 
 /**
@@ -75,7 +75,7 @@ struct RadarMeasurement
 RadarMeasurement operator+(const RadarMeasurement& lhs,
                            const RadarMeasurement& rhs)
 {
-  return RadarMeasurement(lhs.range + rhs.range, lhs.elevation + rhs.elevation);
+  return {lhs.range + rhs.range, lhs.elevation + rhs.elevation};
 }
 
 /**
@@ -93,25 +93,24 @@ RadarMeasurement operator+(const RadarMeasurement& lhs,
 unscented::Vector<2> operator-(const RadarMeasurement& lhs,
                                const RadarMeasurement& rhs)
 {
-  return unscented::Vector<2>(lhs.range - rhs.range,
-                              (lhs.elevation - rhs.elevation)(0));
+  return {lhs.range - rhs.range, (lhs.elevation - rhs.elevation)(0)};
 }
 
-template <std::size_t NUM_SIGMA_POINTS>
-RadarMeasurement radar_measurement_mean_function(
-    const std::array<RadarMeasurement, NUM_SIGMA_POINTS>& states,
-    const std::array<double, NUM_SIGMA_POINTS>& weights)
+template <std::size_t SIZE>
+RadarMeasurement mean_function(
+    const std::array<RadarMeasurement, SIZE>& radar_measurements,
+    const std::array<double, SIZE>& weights)
 {
-  double range{0.0};
-  double a{0.0};
-  double b{0.0};
-  for (std::size_t i = 0; i < NUM_SIGMA_POINTS; ++i)
+  auto mean_range{0.0};
+  unscented::Vector<2> mean_unit_complex;
+  for (std::size_t i = 0; i < SIZE; ++i)
   {
-    range += weights[i] * states[i].range;
-    a += weights[i] * states[i].elevation.a;
-    b += weights[i] * states[i].elevation.b;
+    mean_range += weights[i] * radar_measurements[i].range;
+    mean_unit_complex =
+        mean_unit_complex +
+        weights[i] * radar_measurements[i].elevation.unit_complex();
   }
-  return RadarMeasurement(range, unscented::UnitComplex(a, b));
+  return RadarMeasurement(mean_range, unscented::Rotation2d(mean_unit_complex));
 }
 
 /**

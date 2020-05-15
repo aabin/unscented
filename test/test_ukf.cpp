@@ -19,41 +19,11 @@ TEST_CASE("Static dimensions")
   CHECK(UKF_96::M == 6);
   CHECK(UKF_96::NUM_SIGMA_POINTS == 19);
 
-  using UKF_UnitComplex = UKF<UnitComplex, UnitComplex>;
+  using UKF_Rotation2d = UKF<Rotation2d, Rotation2d>;
 
-  CHECK(UKF_UnitComplex::N == 1);
-  CHECK(UKF_UnitComplex::M == 1);
-  CHECK(UKF_UnitComplex::NUM_SIGMA_POINTS == 3);
-
-  using UKF_SO2 = UKF<SO2, SO2>;
-
-  CHECK(UKF_SO2::N == 1);
-  CHECK(UKF_SO2::M == 1);
-  CHECK(UKF_SO2::NUM_SIGMA_POINTS == 3);
-
-  using UKF_SE2 = UKF<SE2, SE2>;
-
-  CHECK(UKF_SE2::N == 3);
-  CHECK(UKF_SE2::M == 3);
-  CHECK(UKF_SE2::NUM_SIGMA_POINTS == 7);
-
-  using UKF_UnitQuaternion = UKF<UnitQuaternion, UnitQuaternion>;
-
-  CHECK(UKF_UnitQuaternion::N == 3);
-  CHECK(UKF_UnitQuaternion::M == 3);
-  CHECK(UKF_UnitQuaternion::NUM_SIGMA_POINTS == 7);
-
-  using UKF_SO3 = UKF<SO3, SO3>;
-
-  CHECK(UKF_SO3::N == 3);
-  CHECK(UKF_SO3::M == 3);
-  CHECK(UKF_SO3::NUM_SIGMA_POINTS == 7);
-
-  using UKF_SE3 = UKF<SE3, SE3>;
-
-  CHECK(UKF_SE3::N == 6);
-  CHECK(UKF_SE3::M == 6);
-  CHECK(UKF_SE3::NUM_SIGMA_POINTS == 13);
+  CHECK(UKF_Rotation2d::N == 1);
+  CHECK(UKF_Rotation2d::M == 1);
+  CHECK(UKF_Rotation2d::NUM_SIGMA_POINTS == 3);
 }
 
 TEST_CASE("Weights")
@@ -209,8 +179,9 @@ TEST_CASE("Sigma points")
 
   SECTION("State is not a vector space")
   {
-    using UKF = UKF<UnitComplex, UnitComplex>;
-    UKF ukf(unit_complex_mean_function, unit_complex_mean_function);
+    using UKF = UKF<Rotation2d, Rotation2d>;
+    UKF ukf(mean_function<UKF::NUM_SIGMA_POINTS>,
+            mean_function<UKF::NUM_SIGMA_POINTS>);
 
     // No wrapping
     ukf.weight_coefficients(1.0, 1.0, 1.0);
@@ -249,8 +220,7 @@ TEST_CASE("Predict")
   SECTION("State is a vector space")
   {
     using UKF = UKF<Vector<3>, Vector<2>>;
-    UKF ukf(mean_function<Vector<3>, UKF::NUM_SIGMA_POINTS>,
-            mean_function<Vector<2>, UKF::NUM_SIGMA_POINTS>);
+    UKF ukf;
 
     SECTION("Linear system model")
     {

@@ -18,7 +18,7 @@ int main()
   // (range, elevation)
   using UKF = unscented::UKF<AirplaneState, RadarMeasurement>;
   UKF ukf(unscented::mean_function<AirplaneState, UKF::NUM_SIGMA_POINTS>,
-          radar_measurement_mean_function<UKF::NUM_SIGMA_POINTS>);
+          mean_function<UKF::NUM_SIGMA_POINTS>);
 
   // Simulation parameters
   const auto SIM_DURATION = 360.0; // seconds
@@ -96,7 +96,7 @@ int main()
     auto meas = measurement_model(true_state);
     meas.range += range_noise(gen);
     meas.elevation =
-        unscented::UnitComplex(meas.elevation.angle() + elevation_noise(gen));
+        unscented::Rotation2d(meas.elevation.angle() + elevation_noise(gen));
 
     // Update the filter estimates
     ukf.predict(system_model, DT);

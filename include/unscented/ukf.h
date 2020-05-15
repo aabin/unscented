@@ -7,6 +7,10 @@
 
 namespace unscented
 {
+template <typename T, std::size_t SIZE>
+T mean_function(const std::array<T, SIZE>& values,
+                const std::array<double, SIZE>& weights);
+
 template <typename STATE, typename MEAS>
 class UKF
 {
@@ -43,8 +47,10 @@ public:
   using MeasurementMeanFunction =
       std::function<MEAS(const MeasurementSigmaPoints&, const SigmaWeights&)>;
 
-  UKF(StateMeanFunction state_mean_function,
-      MeasurementMeanFunction meas_mean_function);
+  explicit UKF(StateMeanFunction state_mean_function =
+                   mean_function<State, NUM_SIGMA_POINTS>,
+               MeasurementMeanFunction meas_mean_function =
+                   mean_function<Measurement, NUM_SIGMA_POINTS>);
 
   template <typename SYS_MODEL, typename... PARAMS>
   void predict(const SYS_MODEL& system_model, PARAMS...);

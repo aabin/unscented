@@ -28,10 +28,6 @@ target_compile_definitions(airplane_tracking PRIVATE
   EIGEN_INITIALIZE_MATRICES_BY_ZERO=1
   )
 
-# Robot localization example
-# add_executable(robot_localization_2d examples/robot_localization_2d.cpp)
-# target_link_libraries(robot_localization_2d unscented)
-
 # Tests
 enable_testing()
 add_executable(test_ukf test/test_ukf.cpp) 

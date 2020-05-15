@@ -8,6 +8,18 @@
 
 namespace unscented
 {
+template <typename T, std::size_t SIZE>
+T mean_function(const std::array<T, SIZE>& values,
+                const std::array<double, SIZE>& weights)
+{
+  T mean_value;
+  for (std::size_t i = 0; i < SIZE; ++i)
+  {
+    mean_value = mean_value + weights[i] * values[i];
+  }
+  return mean_value;
+}
+
 // Need to explicitly provide the definitions of N, M, and NUM_SIGMA_POINTS
 // despite their declaration and initialization being in the .h file (see
 // https://stackoverflow.com/q/8016780 for more info)
@@ -126,7 +138,8 @@ void UKF<STATE, MEAS>::generate_sigma_points()
   {
     const N_by_1& perturb = sqrt_P.col(i);
     sigma_points_[i + 1] = x_ + STATE(perturb);
-    sigma_points_[N + i + 1] = x_ + STATE(-perturb);
+    const N_by_1& neg_perturb = -perturb;
+    sigma_points_[N + i + 1] = x_ + STATE(neg_perturb);
   }
 }
 
