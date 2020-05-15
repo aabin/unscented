@@ -29,8 +29,7 @@ TEST_CASE("Static dimensions")
 TEST_CASE("Weights")
 {
   using UKF = UKF<Vector<3>, Vector<2>>;
-  UKF ukf(mean_function<Vector<3>, UKF::NUM_SIGMA_POINTS>,
-          mean_function<Vector<2>, UKF::NUM_SIGMA_POINTS>);
+  UKF ukf;
 
   SECTION("Alpha 1, Beta 2, Kappa 0")
   {
@@ -143,8 +142,7 @@ TEST_CASE("Sigma points")
   SECTION("State is a vector space")
   {
     using UKF = UKF<Vector<3>, Vector<2>>;
-    UKF ukf(mean_function<Vector<3>, UKF::NUM_SIGMA_POINTS>,
-            mean_function<Vector<2>, UKF::NUM_SIGMA_POINTS>);
+    UKF ukf;
 
     ukf.weight_coefficients(1.0, 1.0, 1.0);
     ukf.state(UKF::State(1, 2, 3));

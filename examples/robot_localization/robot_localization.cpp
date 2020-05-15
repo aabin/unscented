@@ -206,4 +206,3 @@ int main()
     sim_time += T;
   }
 }
-
